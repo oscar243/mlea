@@ -1,4 +1,4 @@
-\documentclass[a4paper,12pt]{article}
+\documentclass[a4paper,10pt,twocolumn]{article}
 
 % --------------------------------------------------------------------
 % PAQUETES
@@ -6,21 +6,22 @@
 \usepackage[utf8]{inputenc}
 \usepackage[spanish,es-tabla]{babel}
 \usepackage[T1]{fontenc}
-\usepackage{lmodern} 
+\usepackage{mathptmx} % Fuente Times New Roman (Estándar científico)
 \usepackage{geometry}
-\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+\geometry{top=2cm, bottom=2cm, left=1.5cm, right=1.5cm} % Márgenes optimizados
 
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{subcaption}
-\usepackage[labelfont=bf]{caption}
-\usepackage{booktabs}   % Tablas profesionales
+\usepackage[labelfont=bf,font=small]{caption} % Captions más compactos
+\usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{hyperref}
+\usepackage{abstract} % Mejor control del abstract
 
 % Configuración de hipervínculos
 \hypersetup{
@@ -30,193 +31,156 @@
     urlcolor=blue
 }
 
-% Configuración de código Python
-\definecolor{codegreen}{rgb}{0,0.6,0}
-\definecolor{codegray}{rgb}{0.5,0.5,0.5}
-\definecolor{backcolour}{rgb}{0.96,0.96,0.96}
-
-\lstdefinestyle{mystyle}{
-    backgroundcolor=\color{backcolour},   
-    commentstyle=\color{codegreen},
-    keywordstyle=\color{blue},
-    numberstyle=\tiny\color{codegray},
-    stringstyle=\color{red},
-    basicstyle=\ttfamily\footnotesize,
-    breakatwhitespace=false,         
-    breaklines=true,                 
-    captionpos=b,                    
-    keepspaces=true,                 
-    numbers=left,                    
-    numbersep=5pt,                  
-    showspaces=false,                
-    showstringspaces=false,
-    showtabs=false,                  
-    tabsize=2
-}
-\lstset{style=mystyle}
-
-% --------------------------------------------------------------------
-% ENCABEZADO
-% --------------------------------------------------------------------
-\title{\textbf{Optimización de Modelos de Machine Learning para HAR: Integración de Características de Frecuencia y Boosting}}
-\author{
-    \textbf{Oscar A. Virguez} \\
-    \textit{Ingeniero Electrónico}
-}
-\date{5 de Diciembre de 2025}
+\title{\textbf{\Large Informe de Proyecto: Reconocimiento de Actividad Humana (HAR)}}
+\author{\textbf{Oscar A. Virguez} \\ \textit{MLEA 2025-II - qwertylab.dev}}
+\date{\today}
 
 \begin{document}
 
-\maketitle
+\twocolumn[
+  \begin{@twocolumnfalse}
+    \maketitle
+    \begin{abstract}
+        \textit{[Escribir aquí el resumen ejecutivo: Problema + Metodología + Resultado Clave + Conclusión de impacto. Debe ser un párrafo conciso que invite a la lectura del resto del documento.]}
+        \vspace{0.5cm}
+    \end{abstract}
+  \end{@twocolumnfalse}
+]
 
-% --------------------------------------------------------------------
-% RESUMEN
-% --------------------------------------------------------------------
-\begin{abstract}
-    En este trabajo se desarrolló un pipeline de Machine Learning para el reconocimiento de actividades humanas (HAR) utilizando datos de acelerómetros. La metodología se centró en una ingeniería de características avanzada, integrando métricas del dominio de la frecuencia (FFT) y magnitud vectorial (SVM). Se implementó un modelo XGBoost optimizado mediante \textit{RandomizedSearchCV}, abordando el desbalance de clases mediante ponderación de muestras. El modelo final alcanzó una exactitud del \textbf{XX.XX\%} (reemplazar con el valor de tu log, ej: 91.5\%) en el conjunto de prueba, superando significativamente al baseline de Random Forest.
-\end{abstract}
+\section{Introducción}
+El presente documento detalla el flujo de trabajo seguido para realizar una solución al desafío de Reconocimiento de Actividad Humana (HAR), abarcando:
 
-\tableofcontents
-\newpage
+\begin{enumerate}
+    \item \textbf{Análisis Exploratorio de Datos (EDA):} Comprensión de la distribución de clases y características de las señales.
+    \item \textbf{Preprocesamiento e Ingeniería de Características:} Limpieza de datos, normalización y extracción de atributos relevantes para mejorar el desempeño de los modelos.
+    \item \textbf{Modelado Predictivo:} Entrenamiento y evaluación de diversos algoritmos (incluyendo XGBoost y otros enfoques de aprendizaje supervisado).
+    \item \textbf{Optimización y Selección:} Ajuste de hiperparámetros y selección del modelo óptimo balanceando precisión (\textit{accuracy}) y eficiencia computacional.
+    \item \textbf{Generación de Resultados:} Producción del archivo de predicciones para la competencia.
+\end{enumerate}
 
-% --------------------------------------------------------------------
-% 1. METODOLOGÍA
-% --------------------------------------------------------------------
-\section{Enfoque Metodológico}
+[Escribir aquí la introducción del problema, contexto del HAR y objetivos del proyecto.]
 
-Para garantizar la reproducibilidad y la robustez de la solución, se diseñó un flujo de trabajo secuencial y lógico. Este enfoque permite transformar los datos crudos de los sensores en predicciones precisas mediante las siguientes etapas estructuradas:
+\section{Metodología y Análisis Exploratorio}
 
-\subsection{Etapa 1: Unificación y Preprocesamiento de Datos}
-Los datos originales se encontraban fragmentados en múltiples archivos. El primer paso consistió en la unificación de los conjuntos de entrenamiento y prueba mediante scripts personalizados. Se aseguró la integridad de los datos verificando la consistencia de las etiquetas y alineando las series temporales de los acelerómetros ($x, y, z$) con sus respectivos metadatos.
+\subsection{Unificación y Carga de Datos}
+Se procedió a la carga y unificación de los conjuntos de datos provenientes de tres fuentes: entrenamiento, prueba y validación (Kaggle). Se consolidaron las señales de acelerometría y los metadatos correspondientes en un único estructura de datos para facilitar el preprocesamiento conjunto. Se verificó la consistencia de las dimensiones y se etiquetó cada registro con su fuente de origen.
 
-\subsection{Etapa 2: Análisis Exploratorio de Datos (EDA)}
-Antes del modelado, se realizó un análisis exhaustivo para comprender la naturaleza del problema:
-\begin{itemize}
-    \item \textbf{Distribución de Clases:} Se identificó un desbalance significativo, con una predominancia de actividades dinámicas (Walking, Jogging) frente a estáticas (Sitting, Standing).
-    \item \textbf{Análisis de Señales:} La visualización de las series temporales reveló que las actividades dinámicas presentan patrones periódicos claros, mientras que las estáticas se caracterizan por ruido de baja amplitud.
-\end{itemize}
+\subsection{Calidad de los Datos}
+Se realizó una auditoría de calidad enfocada en la longitud de las secuencias temporales. Se confirmó que la gran mayoría de los \textit{snippets} cumplen con la longitud estándar de 100 muestras (correspondientes a 5 segundos a 20 Hz). Este hallazgo permite asumir vectores de características de longitud fija para las etapas posteriores de modelado.
 
-\subsection{Etapa 3: Ingeniería de Características (Feature Engineering)}
-Esta fase fue crítica para mejorar el rendimiento del modelo. Se generaron nuevas variables para capturar patrones complejos:
+Además, el análisis preliminar sugiere una alta correlación entre las métricas de tendencia central (media, mediana, suma) y una redundancia matemática entre la varianza y la desviación estándar.
 
-\subsubsection{Magnitud del Vector de Señal (SVM)}
-Para hacer el modelo invariante a la orientación del dispositivo, se calculó la norma del vector de aceleración:
+\subsection{Análisis Exploratorio de Datos (EDA)}
+
+\subsubsection{Balance de Clases}
+El análisis de la distribución de clases en el conjunto de entrenamiento revela el balance entre las diferentes actividades. Se utilizó una paleta de colores cualitativa (Set2) para distinguir claramente cada categoría.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{../plots/class_distribution.png}
+    \caption{Distribución de clases en el conjunto de entrenamiento.}
+    \label{fig:class_dist}
+\end{figure}
+
+\subsubsection{Visualización de Señales}
+Se inspeccionaron visualmente las señales de acelerometría en los tres ejes (X, Y, Z) para muestras representativas de cada actividad. Esto permitió identificar patrones temporales básicos y diferencias de amplitud.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{../plots/signals_examples.png}
+    \caption{Ejemplos de señales de acelerómetro por actividad (Small Multiples).}
+    \label{fig:signals}
+\end{figure*}
+
+\subsubsection{Correlación de Características}
+Se calculó la matriz de correlación entre las variables numéricas de los metadatos para identificar redundancias. Se utilizó un mapa de color divergente (\textit{coolwarm}) centrado en cero para visualizar correlaciones positivas y negativas.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{../plots/correlation_matrix.png}
+    \caption{Matriz de correlación de características (Metadata).}
+    \label{fig:corr}
+\end{figure}
+
+\subsection{Análisis de Orientación y SVM}
+Se investigó la dependencia de las mediciones respecto a la orientación del dispositivo. Los gráficos de dispersión 3D de los promedios por eje mostraron que, incluso para actividades estáticas como \textit{Standing}, existe una variabilidad esférica que sugiere cambios en la posición del sensor (rotación).
+
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{../plots/3d_orientation_distribution.png}
+        \caption{Distribución 3D de promedios.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{../plots/3d_standing_gravity.png}
+        \caption{Efecto de gravedad en Standing.}
+    \end{subfigure}
+    \caption{Análisis de orientación y efecto de la gravedad.}
+    \label{fig:orientation}
+\end{figure*}
+
+El análisis de orientación revela que, aunque los ejes mantienen cierta alineación general, existen variaciones notables entre muestras debido a la rotación del dispositivo. Utilizar la \textbf{Magnitud del Vector de Señal (SVM)} para obtener características invariantes a la posición del sensor puede ayudar a diferenciar mejor las señales que usar las componentes cartesianas. Los resultados sugieren que un sistema de coordenadas esféricas se adapta mejor a la física del movimiento (especialmente bajo la influencia constante de la gravedad), y que la amplitud (magnitud) resulta ser una variable más efectiva e interpretable, permitiendo capturar la intensidad de la actividad sin el ruido introducido por los cambios de dirección.
+
+Debido a esta variabilidad, se decidió utilizar la \textbf{Magnitud del Vector de Señal (SVM)} como característica principal invariante a la rotación:
 \begin{equation}
     SVM = \sqrt{x^2 + y^2 + z^2}
 \end{equation}
-Esta métrica resume la intensidad total del movimiento en un solo valor escalar por instante de tiempo.
 
-\subsubsection{Características en el Dominio de la Frecuencia}
-Dado el carácter cíclico de muchas actividades humanas, se aplicó la Transformada Rápida de Fourier (FFT) sobre ventanas deslizantes. Se extrajeron métricas clave como la \textit{frecuencia dominante}, la \textit{energía espectral} y la \textit{magnitud pico}. Estas características permiten distinguir, por ejemplo, entre caminar y correr basándose en la cadencia del paso.
+\subsection{Análisis en el Dominio de la Frecuencia}
+Para caracterizar mejor las actividades dinámicas frente a las estáticas, se analizaron las propiedades espectrales de la señal SVM.
 
-\subsection{Etapa 4: Selección de Características}
-Para evitar la "maldición de la dimensionalidad" y mejorar la generalización:
-\begin{itemize}
-    \item \textbf{Eliminación de Redundancia:} Se eliminaron variables con alta colinealidad (ej. varianza vs. desviación estándar).
-    \item \textbf{Ranking de Importancia:} Se utilizaron técnicas como \textit{Mutual Information} y la importancia intrínseca de árboles de decisión para seleccionar el subconjunto óptimo de variables predictivas.
-\end{itemize}
+Se visualizó la "huella digital" de cada actividad superponiendo múltiples señales de SVM. Esto permite observar la varianza intra-clase y patrones periódicos característicos (ej. pasos en \textit{Walking} vs ruido en \textit{Sitting}).
 
-\subsection{Etapa 5: Estrategia de Modelado y Balanceo}
-Se seleccionó XGBoost como algoritmo principal. Para mitigar el desbalance de clases detectado en la Etapa 2, se implementó una estrategia de ponderación de muestras (\texttt{sample\_weights}), asignando mayor peso a los errores cometidos en las clases minoritarias durante el entrenamiento.
-
-% --------------------------------------------------------------------
-% 2. ANÁLISIS EXPLORATORIO (EDA)
-% --------------------------------------------------------------------
-\section{Análisis Exploratorio de Datos}
-
-\subsection{Importancia de Características}
-Tras entrenar un modelo preliminar, se analizó la importancia de las variables. Se observó que las nuevas características generadas (especialmente SVM y las derivadas de FFT) ocuparon los primeros lugares en ganancia de información.
-
-% REEMPLAZAR CON TU GRÁFICA GENERADA EN ETAPA 2 o 3
-\begin{figure}[H]
+\begin{figure*}[t]
     \centering
-    % \includegraphics[width=0.8\textwidth]{feature_importance_xgb.png}
-    \caption{\textbf{Top 15 Características más importantes.} Nótese la relevancia de las variables derivadas de SVM y Energía frente a los datos crudos originales.}
-    \label{fig:feat_imp}
+    \includegraphics[width=\textwidth]{../plots/svm_fingerprint.png}
+    \caption{Huella Digital de Actividades: Superposición de señales SVM.}
+    \label{fig:fingerprint}
+\end{figure*}
+
+\subsubsection{Densidad Espectral de Potencia (PSD)}
+El periodograma de Welch permitió visualizar la distribución de energía en frecuencia para cada actividad.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{../plots/psd_average.png}
+    \caption{Densidad Espectral de Potencia promedio por actividad.}
+    \label{fig:psd}
 \end{figure}
 
-\subsection{Selección de Características}
-Se compararon sistemáticamente tres métodos de selección: F-test (ANOVA), Información Mutua y la importancia intrínseca de XGBoost. Los resultados indicaron que el uso de las mejores 30-40 características permitía mantener la precisión reduciendo la complejidad del modelo.
+\subsubsection{Autocorrelación}
+La autocorrelación mide la similitud de una señal consigo misma desplazada en el tiempo (lag). Para actividades periódicas (caminar, correr), la autocorrelación muestra picos claros y repetitivos correspondientes al periodo del movimiento. Por el contrario, para actividades aperiódicas o estáticas, la autocorrelación decae rápidamente sin mostrar picos secundarios significativos.
 
-% --------------------------------------------------------------------
-% 3. MODELADO Y OPTIMIZACIÓN
-% --------------------------------------------------------------------
-\section{Modelado y Resultados}
-
-Se evaluaron dos arquitecturas principales: Random Forest (como línea base) y XGBoost (Extreme Gradient Boosting).
-
-\subsection{Configuración del Modelo Óptimo}
-El modelo final se basó en XGBoost debido a su capacidad para manejar datos desbalanceados y su regularización intrínseca. Se realizó una búsqueda aleatoria (\texttt{RandomizedSearchCV}) sobre 50 combinaciones de hiperparámetros con validación cruzada estratificada ($k=5$). El espacio de búsqueda incluyó:
-
-\begin{itemize}
-    \item \texttt{n\_estimators}: [150, 200, 250, 300, 400]
-    \item \texttt{max\_depth}: [4, 5, 6, 7, 8]
-    \item \texttt{learning\_rate}: [0.05, 0.1, 0.15, 0.2]
-    \item \texttt{subsample} y \texttt{colsample\_bytree}: Para controlar el sobreajuste.
-\end{itemize}
-
-\subsection{Comparación de Desempeño}
-La Tabla \ref{tab:resultados} resume la mejora progresiva obtenida a través de las diferentes etapas del proyecto.
-
-\begin{table}[H]
+\begin{figure*}[t]
     \centering
-    \caption{Evolución del desempeño (Accuracy) en el conjunto de prueba.}
-    \label{tab:resultados}
-    \begin{tabular}{llcc}
-        \toprule
-        \textbf{Etapa} & \textbf{Modelo y Estrategia} & \textbf{Accuracy} & \textbf{Mejora} \\
-        \midrule
-        Etapa 1 & Random Forest (Metadata básica) & 86.14\% & - \\
-        Etapa 2 & XGBoost + Balance de Clases & 88.57\% & +2.43\% \\
-        Etapa 3 & \textbf{XGBoost Optimizado + FFT Features} & \textbf{91.XX\%} & \textbf{+X.XX\%} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+    \includegraphics[width=\textwidth]{../plots/autocorrelation.png}
+    \caption{Análisis de Autocorrelación por Actividad.}
+    \label{fig:autocorr}
+\end{figure*}
 
-\subsection{Análisis de Errores}
-La matriz de confusión del modelo optimizado muestra una clara separación entre actividades dinámicas (Walking, Jogging) y estáticas (Sitting, Standing). La mayor fuente de error persiste entre "Upstairs" y "Downstairs", lo cual es esperable dada la similitud en la firma espectral de ambas actividades.
+\subsubsection{Espectrogramas y Entropía}
+Los espectrogramas revelaron la evolución temporal de las frecuencias, mientras que la entropía espectral cuantificó la complejidad de la señal, resultando ser un discriminador potente entre actividades estáticas (alta entropía/ruido) y dinámicas (baja entropía/cíclicas).
 
-% --------------------------------------------------------------------
-% 4. DISCUSIÓN
-% --------------------------------------------------------------------
-\section{Discusión y Conclusiones}
+El análisis en el dominio de la frecuencia confirma una clara distinción entre actividades estáticas (\textit{Standing}, \textit{Sitting}) y dinámicas. Mientras que actividades como \textit{Jogging}, \textit{Walking} y subir/bajar escaleras presentan firmas espectrales únicas y bien diferenciadas, el principal desafío radica en distinguir entre \textit{Sitting} y \textit{Standing}. Ambas muestran perfiles de frecuencia muy similares y las características calculadas no revelan diferencias significativas a simple vista; sin embargo, una inspección detallada de los espectrogramas sugiere una densidad espectral ligeramente mayor en \textit{Standing}, lo cual podría ser un factor clave para su clasificación.
 
-La inclusión de características de frecuencia calculadas en el script \texttt{create\_simple\_metadata.py} fue determinante para la mejora del modelo. Mientras que las estadísticas simples (media, desviación) capturan la distribución de la señal, la FFT captura la periodicidad, crucial para diferenciar caminar de trotar.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{../plots/spectral_entropy.png}
+    \caption{Distribución de la Entropía Espectral por actividad.}
+    \label{fig:entropy}
+\end{figure}
 
-Asimismo, la eliminación de características redundantes (como varianza vs. desviación estándar) realizada en la Etapa 2 no solo redujo el tiempo de entrenamiento, sino que evitó la multicolinealidad, mejorando la estabilidad del modelo XGBoost.
+\section{Modelado Predictivo}
+[Describir aquí los modelos utilizados, estrategias de validación cruzada y selección de hiperparámetros.]
 
-\subsection{Trabajo Futuro}
-Aunque el modelo actual es robusto, se sugiere explorar arquitecturas de Deep Learning como LSTMs o CNNs 1D aplicadas directamente sobre las señales crudas (\texttt{unified\_data.parquet}) para capturar dependencias temporales secuenciales que las estadísticas agregadas podrían perder.
+\section{Resultados}
+[Incluir tablas de métricas, matrices de confusión y comparación con el baseline.]
 
-% --------------------------------------------------------------------
-% APÉNDICE
-% --------------------------------------------------------------------
-\newpage
-\appendix
-\section{Apéndice: Código de Optimización}
+\section{Discusión}
+[Interpretar los resultados, analizar errores comunes y discutir hallazgos.]
 
-A continuación se muestra el fragmento clave utilizado para la búsqueda de hiperparámetros en la Etapa 3.
-
-\begin{lstlisting}[language=Python, caption=Búsqueda de Hiperparámetros con RandomizedSearchCV]
-# Espacio de búsqueda definido en etapa_3_optimization.py
-param_distributions = {
-    'n_estimators': [150, 200, 250, 300, 400],
-    'max_depth': [4, 5, 6, 7, 8],
-    'learning_rate': [0.05, 0.1, 0.15, 0.2],
-    'subsample': [0.7, 0.8, 0.9, 1.0],
-    'colsample_bytree': [0.7, 0.8, 0.9, 1.0]
-}
-
-# Ejecución de la búsqueda aleatoria
-random_search = RandomizedSearchCV(
-    estimator=base_xgb,
-    param_distributions=param_distributions,
-    n_iter=50,
-    cv=cv_folds,
-    scoring='accuracy',
-    n_jobs=-1,
-    random_state=3141
-)
-\end{lstlisting}
+\section{Conclusiones y Trabajo Futuro}
+[Resumir los logros y proponer mejoras futuras.]
 
 \end{document}
